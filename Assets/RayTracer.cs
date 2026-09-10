@@ -3,7 +3,7 @@ using UnityEngine;
 public class RayTracer : MonoBehaviour
 {
     [SerializeField] private RenderTexture renderTexture;
-
+    [SerializeField] private Light lightSource;
 
     void Update()
     {
@@ -19,13 +19,19 @@ public class RayTracer : MonoBehaviour
         if (tex == null)
             return;
 
+        // (1) Make base color
         Vector2 uv = hit.textureCoord;
         Color texColor = tex.GetPixelBilinear(uv.x, uv.y); // Return the interpolated color at UV coordinate.
         Color tint = renderer.sharedMaterial.GetColor("_BaseColor");
+        Color baseColor = texColor * tint;
 
-        Color baseColor = texColor * tint; 
+        // (2) Make diffuse color
+        Vector3 lightDir = -lightSource.transform.forward;
+        float diffuse = Mathf.Max(0f, Vector3.Dot(hit.normal, lightDir));
 
-        RenderTexture.active = renderTexture;  // Set current render target
-        GL.Clear(false, true, baseColor);      // Initialize current render target with the base color
+        Color renderColor = baseColor * diffuse;
+
+        RenderTexture.active = renderTexture;    // Set current render target
+        GL.Clear(false, true, renderColor);      // Initialize current render target with the base color
     }
 }
