@@ -27,9 +27,13 @@ public class RayTracer : MonoBehaviour
 
         // (2) Make diffuse color
         Vector3 lightDir = -lightSource.transform.forward;
-        float diffuse = Mathf.Max(0f, Vector3.Dot(hit.normal, lightDir));
+        float diffuse = Mathf.Max(0, Vector3.Dot(hit.normal, lightDir));
 
-        Color renderColor = baseColor * diffuse;
+        // (3) Combine ambient and diffuse to prevent shaded area being black
+        float ambientStrength = 0.4f;
+        float lighting = Mathf.Clamp01(ambientStrength + diffuse);
+
+        Color renderColor = baseColor * lighting;
 
         RenderTexture.active = renderTexture;    // Set current render target
         GL.Clear(false, true, renderColor);      // Initialize current render target with the base color
