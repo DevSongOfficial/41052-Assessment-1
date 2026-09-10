@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class RayTracer : MonoBehaviour
 {
+    [SerializeField] private RenderTexture renderTexture;
+
+
     void Update()
     {
         Ray ray = new Ray(transform.position, transform.forward);
@@ -17,6 +20,12 @@ public class RayTracer : MonoBehaviour
             return;
 
         Vector2 uv = hit.textureCoord;
-        Color baseColor = tex.GetPixelBilinear(uv.x, uv.y); // Return the interpolated color at UV coordinate.
+        Color texColor = tex.GetPixelBilinear(uv.x, uv.y); // Return the interpolated color at UV coordinate.
+        Color tint = renderer.sharedMaterial.GetColor("_BaseColor");
+
+        Color baseColor = texColor * tint; 
+
+        RenderTexture.active = renderTexture;  // Set current render target
+        GL.Clear(false, true, baseColor);      // Initialize current render target with the base color
     }
 }
