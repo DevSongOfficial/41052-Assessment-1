@@ -21,7 +21,7 @@ public class RayTracer : MonoBehaviour
 
     private List<Renderer> pixels = new List<Renderer>();
 
-    private readonly Color DefaultColor = Color.clear;
+    private readonly Color DefaultColor = Color.black;
     private readonly Vector2Int FOV = new Vector2Int(50, 50);
 
     private void Awake()
@@ -31,13 +31,18 @@ public class RayTracer : MonoBehaviour
 
     private void Start()
     {
+        widthInputField.SetTextWithoutNotify(width.ToString());
+        heightInputField.SetTextWithoutNotify(height.ToString());
+
         InitializePixels();
         Render();
     }
 
     public void InitializePixels()
     {
-        foreach(var pixel in pixels.ToArray())
+        UpdateResolution();
+
+        foreach (var pixel in pixels.ToArray())
             GameObject.Destroy(pixel.gameObject);
 
         pixels.Clear();
@@ -62,6 +67,10 @@ public class RayTracer : MonoBehaviour
 
     public void Render()
     {
+        UpdateResolution();
+        if (pixels.Count != width * height) InitializePixels();
+
+
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -96,7 +105,14 @@ public class RayTracer : MonoBehaviour
         renderer.SetPropertyBlock(propertyBlock);
     }
 
+    private void UpdateResolution()
+    {
+        if (int.TryParse(widthInputField.text, out int newWidth))
+            width = newWidth;
 
+        if (int.TryParse(heightInputField.text, out int newHeight))
+            height = newHeight;
+    }
 
     private Color TraceRay(Ray ray)
     {
