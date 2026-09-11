@@ -150,23 +150,12 @@ public class RayTracer : MonoBehaviour
             inShadow = Physics.Raycast(origin, lightDirection);
         }
 
-        // (3) Make diffuse color
-        float diffuse = 0;
-
-        if (diffuseToggle.isOn)
-        {
-            diffuse = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
-
-            if (inShadow)
-                diffuse = 0;
-        }
-
         // (3) Make ambient color
         Color ambientColor = DefaultColor;
 
         if (ambientToggle.isOn)
         {
-            float ambientStrength = 0.4f;
+            float ambientStrength = 0.3f;
             ambientColor = baseColor * ambientStrength;
         }
 
