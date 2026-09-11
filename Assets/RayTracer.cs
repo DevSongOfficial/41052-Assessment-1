@@ -29,7 +29,7 @@ public class RayTracer : MonoBehaviour
         propertyBlock = new MaterialPropertyBlock();
     }
 
-    public void Start()
+    private void Start()
     {
         InitializePixels();
         Render();
@@ -85,8 +85,9 @@ public class RayTracer : MonoBehaviour
                 float horizontalAngle = Mathf.Lerp(-FOV.x * 0.5f, FOV.x * 0.5f, u);
                 float verticalAngle = Mathf.Lerp(FOV.y * 0.5f, -FOV.y * 0.5f, v);
 
-                Quaternion rotation = Quaternion.Euler(verticalAngle, horizontalAngle, 0);
-                Vector3 direction = rotation * transform.forward;
+                Vector3 direction = Quaternion.AngleAxis(horizontalAngle, transform.up) *
+                                    Quaternion.AngleAxis(verticalAngle, transform.right) *
+                                    transform.forward;
 
                 Ray ray = new Ray(transform.position, direction);
                 Color color = TraceRay(ray);
