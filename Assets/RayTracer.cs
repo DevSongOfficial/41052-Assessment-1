@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RayTracer : MonoBehaviour
 {
@@ -12,6 +13,11 @@ public class RayTracer : MonoBehaviour
     [Header("UI")]
     [SerializeField] private TMP_InputField widthInputField;
     [SerializeField] private TMP_InputField heightInputField;
+    [Space]
+    [SerializeField] private Toggle shadowToggle;
+    [SerializeField] private Toggle diffuseToggle;
+    [SerializeField] private Toggle ambientToggle;
+    [SerializeField] private Toggle specularToggle;
 
     [Space]
     [SerializeField] private int width = 16;
@@ -107,11 +113,11 @@ public class RayTracer : MonoBehaviour
 
     private void UpdateResolution()
     {
-        if (int.TryParse(widthInputField.text, out int newWidth))
-            width = newWidth;
+        if (int.TryParse(widthInputField.text, out int width))
+            this.width = Mathf.Clamp(width, 1, 512);
 
-        if (int.TryParse(heightInputField.text, out int newHeight))
-            height = newHeight;
+        if (int.TryParse(heightInputField.text, out int height))
+            this.height = Mathf.Clamp(height, 1, 512);
     }
 
     private Color TraceRay(Ray ray)
@@ -133,22 +139,49 @@ public class RayTracer : MonoBehaviour
         Color baseColor = texColor * tint;
 
         Vector3 lightDirection = -lightSource.transform.forward;
-        
+
         // (2) Check if the target is in shadow
-        float originOffset = 0.01f; // Used to avoid self-collision
-        Vector3 origin = hit.point + hit.normal * originOffset; 
-        bool inShadow = Physics.Raycast(origin, lightDirection);
+        bool inShadow = false;
+
+        if (shadowToggle.isOn)
+        {
+            float originOffset = 0.01f; // Used to avoid self-collision
+            Vector3 origin = hit.point + hit.normal * originOffset;
+            inShadow = Physics.Raycast(origin, lightDirection);
+        }
 
         // (3) Make diffuse color
-        float diffuse = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
-        diffuse = inShadow ? 0 : diffuse;
+        float diffuse = 0;
+
+        if (diffuseToggle.isOn)
+        {
+            diffuse = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
+
+            if (inShadow)
+                diffuse = 0;
+        }
 
         // (4) Combine ambient and diffuse to prevent shaded area being black
-        float ambientStrength = 0.4f;
+        float ambientStrength = ambientToggle.isOn ? 0.4f : 0f;
         float lighting = Mathf.Clamp01(ambientStrength + diffuse);
 
-        Color renderColor = baseColor * lighting;
-        
+        // (5) Add specular
+        Color specularColor = Color.black;
+
+        if (specularToggle.isOn)
+        {
+            Vector3 viewDirection = (transform.position - hit.point).normalized;
+            Vector3 reflectionDirection = Vector3.Reflect(-lightDirection, hit.normal);
+            float specular = Mathf.Pow(Mathf.Max(0, Vector3.Dot(viewDirection, reflectionDirection)), 16);
+
+            if (inShadow)
+                specular = 0;
+
+            specularColor = specular * Color.white;
+        }
+
+        Color renderColor = baseColor * lighting + specularColor;
+
         return renderColor;
     }
 }
