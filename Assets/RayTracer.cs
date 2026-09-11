@@ -116,11 +116,18 @@ public class RayTracer : MonoBehaviour
         Color tint = renderer.sharedMaterial.GetColor("_BaseColor");
         Color baseColor = texColor * tint;
 
-        // (2) Make diffuse color
         Vector3 lightDirection = -lightSource.transform.forward;
-        float diffuse = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
+        
+        // (2) Check if the target is in shadow
+        float originOffset = 0.01f; // Used to avoid self-collision
+        Vector3 origin = hit.point + hit.normal * originOffset; 
+        bool inShadow = Physics.Raycast(origin, lightDirection);
 
-        // (3) Combine ambient and diffuse to prevent shaded area being black
+        // (3) Make diffuse color
+        float diffuse = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
+        diffuse = inShadow ? 0 : diffuse;
+
+        // (4) Combine ambient and diffuse to prevent shaded area being black
         float ambientStrength = 0.4f;
         float lighting = Mathf.Clamp01(ambientStrength + diffuse);
 
