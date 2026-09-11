@@ -21,7 +21,7 @@ public class RayTracer : MonoBehaviour
 
     private List<Renderer> pixels = new List<Renderer>();
 
-    private readonly Color DefaultColor = Color.black;
+    private readonly Color DefaultColor = Color.clear;
     private readonly Vector2Int FOV = new Vector2Int(50, 50);
 
     private void Awake()
@@ -35,7 +35,7 @@ public class RayTracer : MonoBehaviour
         Render();
     }
 
-    private void InitializePixels()
+    public void InitializePixels()
     {
         foreach(var pixel in pixels.ToArray())
             GameObject.Destroy(pixel.gameObject);
@@ -60,6 +60,29 @@ public class RayTracer : MonoBehaviour
             }
     }
 
+    public void Render()
+    {
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                float u = (float)x  / width;
+                float v = (float)y  / height;
+
+                float planeX = (2 * u - 1) * Mathf.Tan(FOV.x * 0.5f * Mathf.Deg2Rad);
+                float planeY = (1 - 2 * v) * Mathf.Tan(FOV.y * 0.5f * Mathf.Deg2Rad);
+
+                Vector3 localDirection = new Vector3(planeX, planeY, 1f).normalized;
+                Vector3 direction = transform.TransformDirection(localDirection);
+
+                Ray ray = new Ray(transform.position, direction);
+                Color color = TraceRay(ray);
+
+                SetPixel(x, y, color);
+            }
+        }
+    }
+
     private void SetPixel(int x, int y, Color color)
     {
         int index = width * y + x;
@@ -73,29 +96,6 @@ public class RayTracer : MonoBehaviour
         renderer.SetPropertyBlock(propertyBlock);
     }
 
-    private void Render()
-    {
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                float u = (float)x  / width;
-                float v = (float)y  / height;
-
-                float horizontalAngle = Mathf.Lerp(-FOV.x * 0.5f, FOV.x * 0.5f, u);
-                float verticalAngle = Mathf.Lerp(FOV.y * 0.5f, -FOV.y * 0.5f, v);
-
-                Vector3 direction = Quaternion.AngleAxis(horizontalAngle, transform.up) *
-                                    Quaternion.AngleAxis(verticalAngle, transform.right) *
-                                    transform.forward;
-
-                Ray ray = new Ray(transform.position, direction);
-                Color color = TraceRay(ray);
-
-                SetPixel(x, y, color);
-            }
-        }
-    }
 
 
     private Color TraceRay(Ray ray)
