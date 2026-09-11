@@ -161,26 +161,47 @@ public class RayTracer : MonoBehaviour
                 diffuse = 0;
         }
 
-        // (4) Combine ambient and diffuse to prevent shaded area being black
-        float ambientStrength = ambientToggle.isOn ? 0.4f : 0f;
-        float lighting = Mathf.Clamp01(ambientStrength + diffuse);
+        // (3) Make ambient color
+        Color ambientColor = DefaultColor;
 
-        // (5) Add specular
-        Color specularColor = Color.black;
+        if (ambientToggle.isOn)
+        {
+            float ambientStrength = 0.4f;
+            ambientColor = baseColor * ambientStrength;
+        }
+
+        // (4) Make diffuse color
+        Color diffuseColor = DefaultColor;
+
+        if (diffuseToggle.isOn)
+        {
+            float diffuseFactor = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
+
+            if (inShadow)
+                diffuseFactor = 0;
+
+            Color lightColor = lightSource.color * lightSource.intensity;
+            diffuseColor = baseColor * lightColor * diffuseFactor;
+        }
+
+        // (5) Make specular color
+        Color specularColor = DefaultColor;
 
         if (specularToggle.isOn)
         {
             Vector3 viewDirection = (transform.position - hit.point).normalized;
             Vector3 reflectionDirection = Vector3.Reflect(-lightDirection, hit.normal);
-            float specular = Mathf.Pow(Mathf.Max(0, Vector3.Dot(viewDirection, reflectionDirection)), 16);
+
+            float specularFactor = Mathf.Pow(Mathf.Max(0, Vector3.Dot(viewDirection, reflectionDirection)), 16);
 
             if (inShadow)
-                specular = 0;
+                specularFactor = 0;
 
-            specularColor = specular * Color.white;
+            Color lightColor = lightSource.color * lightSource.intensity;
+            specularColor = lightColor * specularFactor;
         }
 
-        Color renderColor = baseColor * lighting + specularColor;
+        Color renderColor = ambientColor + diffuseColor + specularColor;
 
         return renderColor;
     }
