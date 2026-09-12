@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Diagnostics;
 
 public class RayTracer : MonoBehaviour
 {
@@ -29,7 +31,10 @@ public class RayTracer : MonoBehaviour
 
     private readonly Color DefaultColor = Color.black;
     private readonly Vector2Int FOV = new Vector2Int(50, 50);
+    private float renderDuration = 5f;
 
+    private Coroutine renderCoroutine;
+    
     private void Awake()
     {
         propertyBlock = new MaterialPropertyBlock();
@@ -40,8 +45,47 @@ public class RayTracer : MonoBehaviour
         widthInputField.SetTextWithoutNotify(width.ToString());
         heightInputField.SetTextWithoutNotify(height.ToString());
 
-        InitializePixels();
-        Render();
+        //InitializePixels();
+        //Render();
+    }
+
+    [ContextMenu("TEST")]
+    public void MeasureTimeWithoutRendering()
+    {
+        for(int resolution = 8; resolution <= 2048; resolution = resolution * 2)
+        {
+            width = resolution;
+            height = resolution;
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float u = (x + 0.5f) / width;
+                    float v = (y + 0.5f) / height;
+
+                    float planeX = (2 * u - 1) * Mathf.Tan(FOV.x * 0.5f * Mathf.Deg2Rad);
+                    float planeY = (1 - 2 * v) * Mathf.Tan(FOV.y * 0.5f * Mathf.Deg2Rad);
+
+                    Vector3 localDirection = new Vector3(planeX, planeY, 1f).normalized;
+                    Vector3 direction = transform.TransformDirection(localDirection);
+
+                    Ray ray = new Ray(transform.position, direction);
+
+                    Color color = TraceRay(ray);
+
+                    // ...
+                }
+            }
+
+            stopwatch.Stop();
+
+            UnityEngine.Debug.Log($"{width}, {height}: ");
+            UnityEngine.Debug.Log($"Time: {stopwatch.Elapsed.TotalMilliseconds}");
+        }
+
     }
 
     public void InitializePixels()
@@ -73,16 +117,36 @@ public class RayTracer : MonoBehaviour
 
     public void Render()
     {
+        if (renderCoroutine != null)
+            StopCoroutine(renderCoroutine);
+
+        renderCoroutine = StartCoroutine(RenderCoroutine());
+    }
+
+    private IEnumerator RenderCoroutine()
+    {
         UpdateResolution();
         if (pixels.Count != width * height) InitializePixels();
 
+        foreach (Renderer pixel in pixels)
+            SetRendererColor(pixel, DefaultColor);
 
-        for (int y = 0; y < height; y++)
+        int totalPixels = width * height;
+        int renderedPixels = 0;
+        float startTime = Time.time;
+
+        while (renderedPixels < totalPixels)
         {
-            for (int x = 0; x < width; x++)
+            float progress = Mathf.Clamp01((Time.time - startTime) / renderDuration);
+            int targetPixelCount = Mathf.CeilToInt(totalPixels * progress);
+
+            while (renderedPixels < targetPixelCount)
             {
-                float u = (float)x  / width;
-                float v = (float)y  / height;
+                int x = renderedPixels % width;
+                int y = renderedPixels / width;
+
+                float u = (float)x / width;
+                float v = (float)y / height;
 
                 float planeX = (2 * u - 1) * Mathf.Tan(FOV.x * 0.5f * Mathf.Deg2Rad);
                 float planeY = (1 - 2 * v) * Mathf.Tan(FOV.y * 0.5f * Mathf.Deg2Rad);
@@ -94,8 +158,14 @@ public class RayTracer : MonoBehaviour
                 Color color = TraceRay(ray);
 
                 SetPixel(x, y, color);
+
+                renderedPixels++;
             }
+
+            yield return null;
         }
+
+        renderCoroutine = null;
     }
 
     private void SetPixel(int x, int y, Color color)

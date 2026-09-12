@@ -2303,8 +2303,8 @@ MonoBehaviour:
   diffuseToggle: {fileID: 832349746}
   ambientToggle: {fileID: 563036323}
   specularToggle: {fileID: 211695457}
-  width: 160
-  height: 160
+  width: 20
+  height: 20
   screenWidth: 10
   screenHeight: 10
 --- !u!1 &961400324
