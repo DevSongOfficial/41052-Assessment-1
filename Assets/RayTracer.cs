@@ -17,6 +17,7 @@ public class RayTracer : MonoBehaviour
 
     [SerializeField] private TMP_InputField fovXInputField;
     [SerializeField] private TMP_InputField fovYInputField;
+    [Space]
     [SerializeField] private TMP_InputField widthInputField;
     [SerializeField] private TMP_InputField heightInputField;
     [Space]
@@ -30,6 +31,11 @@ public class RayTracer : MonoBehaviour
     [SerializeField] private int height = 16;
     [SerializeField] private float screenWidth = 10f;
     [SerializeField] private float screenHeight = 10f;
+    
+    [Space]
+    [SerializeField] private Slider reflectionSlider;
+    [SerializeField] private int maxReflectionDepth = 3;
+    [SerializeField] private float reflectionStrength = 0.3f;
 
     private List<Renderer> pixels = new List<Renderer>();
 
@@ -56,45 +62,6 @@ public class RayTracer : MonoBehaviour
         heightInputField.onValueChanged.AddListener(_ => LimitInput(heightInputField));
 
         Screen.SetResolution(1280, 720, false);
-
-    }
-
-    [ContextMenu("TEST")]
-    public void MeasureTimeWithoutRendering()
-    {
-        for (int resolution = 8; resolution <= 2048; resolution = resolution * 2)
-        {
-            width = resolution;
-            height = resolution;
-
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    float u = (x + 0.5f) / width;
-                    float v = (y + 0.5f) / height;
-
-                    float planeX = (2 * u - 1) * Mathf.Tan(FOV.x * 0.5f * Mathf.Deg2Rad);
-                    float planeY = (1 - 2 * v) * Mathf.Tan(FOV.y * 0.5f * Mathf.Deg2Rad);
-
-                    Vector3 localDirection = new Vector3(planeX, planeY, 1f).normalized;
-                    Vector3 direction = transform.TransformDirection(localDirection);
-
-                    Ray ray = new Ray(transform.position, direction);
-
-                    Color color = TraceRay(ray);
-
-                    // ...
-                }
-            }
-
-            stopwatch.Stop();
-
-            UnityEngine.Debug.Log($"{width}, {height}: ");
-            UnityEngine.Debug.Log($"Time: {stopwatch.Elapsed.TotalMilliseconds}");
-        }
 
     }
 
@@ -165,7 +132,7 @@ public class RayTracer : MonoBehaviour
                 Vector3 direction = transform.TransformDirection(localDirection);
 
                 Ray ray = new Ray(transform.position, direction);
-                Color color = TraceRay(ray);
+                Color color = TraceRay(ray, 0);
 
                 SetPixel(x, y, color);
 
@@ -193,6 +160,8 @@ public class RayTracer : MonoBehaviour
 
     private void UpdateInputValues()
     {
+        reflectionStrength = reflectionSlider.value;
+
         if (int.TryParse(fovXInputField.text, out int fovX))
             FOV.x = Mathf.Clamp(fovX, 10, 100);
 
@@ -206,7 +175,7 @@ public class RayTracer : MonoBehaviour
             this.height = Mathf.Clamp(height, 1, 512);
     }
 
-    private Color TraceRay(Ray ray)
+    private Color TraceRay(Ray ray, int depth)
     {
         if (!Physics.Raycast(ray, out RaycastHit hit))
             return DefaultColor;
@@ -278,6 +247,22 @@ public class RayTracer : MonoBehaviour
         }
 
         Color renderColor = ambientColor + diffuseColor + specularColor;
+
+        // (6) Make reflection color
+        if (depth < maxReflectionDepth)
+        {
+            float originOffset = 0.01f; // Used to avoid self-collision
+            Vector3 reflectionDirection = Vector3.Reflect(ray.direction, hit.normal);
+            Vector3 origin = hit.point + hit.normal * originOffset;
+
+            Ray reflectionRay = new Ray(origin, reflectionDirection);
+
+            if (Physics.Raycast(reflectionRay))
+            {
+                Color reflectionColor = TraceRay(reflectionRay, depth + 1);
+                renderColor = Color.Lerp(renderColor, reflectionColor, reflectionStrength);
+            }
+        }
 
         return renderColor;
     }
