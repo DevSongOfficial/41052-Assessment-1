@@ -45,8 +45,8 @@ public class RayTracer : MonoBehaviour
         widthInputField.SetTextWithoutNotify(width.ToString());
         heightInputField.SetTextWithoutNotify(height.ToString());
 
-        //InitializePixels();
-        //Render();
+        Screen.SetResolution(1280, 720, false);
+
     }
 
     [ContextMenu("TEST")]
@@ -225,7 +225,7 @@ public class RayTracer : MonoBehaviour
 
         if (ambientToggle.isOn)
         {
-            float ambientStrength = 0.3f;
+            float ambientStrength = 0.75f;
             ambientColor = baseColor * ambientStrength;
         }
 
@@ -235,6 +235,7 @@ public class RayTracer : MonoBehaviour
         if (diffuseToggle.isOn)
         {
             float diffuseFactor = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
+            diffuseFactor = Mathf.Lerp(0.1f, 0.35f, diffuseFactor);
 
             if (inShadow)
                 diffuseFactor = 0;
