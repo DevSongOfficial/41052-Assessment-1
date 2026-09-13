@@ -14,6 +14,9 @@ public class RayTracer : MonoBehaviour
     private MaterialPropertyBlock propertyBlock;
 
     [Header("UI")]
+
+    [SerializeField] private TMP_InputField fovXInputField;
+    [SerializeField] private TMP_InputField fovYInputField;
     [SerializeField] private TMP_InputField widthInputField;
     [SerializeField] private TMP_InputField heightInputField;
     [Space]
@@ -31,7 +34,7 @@ public class RayTracer : MonoBehaviour
     private List<Renderer> pixels = new List<Renderer>();
 
     private readonly Color DefaultColor = Color.black;
-    private readonly Vector2Int FOV = new Vector2Int(50, 50);
+    private Vector2Int FOV = new Vector2Int(50, 50);
     private float renderDuration = 5f;
 
     private Coroutine renderCoroutine;
@@ -97,7 +100,7 @@ public class RayTracer : MonoBehaviour
 
     public void InitializePixels()
     {
-        UpdateResolution();
+        UpdateInputValues();
 
         foreach (var pixel in pixels.ToArray())
             GameObject.Destroy(pixel.gameObject);
@@ -132,7 +135,7 @@ public class RayTracer : MonoBehaviour
 
     private IEnumerator RenderCoroutine()
     {
-        UpdateResolution();
+        UpdateInputValues();
         if (pixels.Count != width * height) InitializePixels();
 
         foreach (Renderer pixel in pixels)
@@ -188,8 +191,14 @@ public class RayTracer : MonoBehaviour
         renderer.SetPropertyBlock(propertyBlock);
     }
 
-    private void UpdateResolution()
+    private void UpdateInputValues()
     {
+        if (int.TryParse(fovXInputField.text, out int fovX))
+            FOV.x = Mathf.Clamp(fovX, 10, 100);
+
+        if (int.TryParse(fovYInputField.text, out int fovY))
+            FOV.y= Mathf.Clamp(fovY, 10, 100);
+
         if (int.TryParse(widthInputField.text, out int width))
             this.width = Mathf.Clamp(width, 1, 512);
 
