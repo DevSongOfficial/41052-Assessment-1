@@ -225,7 +225,7 @@ public class RayTracer : MonoBehaviour
 
         if (ambientToggle.isOn)
         {
-            float ambientStrength = 0.75f;
+            float ambientStrength = 0.6f;
             ambientColor = baseColor * ambientStrength;
         }
 
@@ -235,7 +235,7 @@ public class RayTracer : MonoBehaviour
         if (diffuseToggle.isOn)
         {
             float diffuseFactor = Mathf.Max(0, Vector3.Dot(hit.normal, lightDirection));
-            diffuseFactor = Mathf.Lerp(0.1f, 0.35f, diffuseFactor);
+            diffuseFactor = Mathf.Lerp(0, 0.35f, diffuseFactor);
 
             if (inShadow)
                 diffuseFactor = 0;
