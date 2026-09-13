@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Diagnostics;
+using static UnityEngine.Rendering.DebugUI;
 
 public class RayTracer : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class RayTracer : MonoBehaviour
     private float renderDuration = 5f;
 
     private Coroutine renderCoroutine;
-    
+
     private void Awake()
     {
         propertyBlock = new MaterialPropertyBlock();
@@ -45,6 +46,12 @@ public class RayTracer : MonoBehaviour
         widthInputField.SetTextWithoutNotify(width.ToString());
         heightInputField.SetTextWithoutNotify(height.ToString());
 
+        widthInputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+        heightInputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+
+        widthInputField.onValueChanged.AddListener(_ => LimitInput(widthInputField));
+        heightInputField.onValueChanged.AddListener(_ => LimitInput(heightInputField));
+
         Screen.SetResolution(1280, 720, false);
 
     }
@@ -52,7 +59,7 @@ public class RayTracer : MonoBehaviour
     [ContextMenu("TEST")]
     public void MeasureTimeWithoutRendering()
     {
-        for(int resolution = 8; resolution <= 2048; resolution = resolution * 2)
+        for (int resolution = 8; resolution <= 2048; resolution = resolution * 2)
         {
             width = resolution;
             height = resolution;
@@ -104,11 +111,11 @@ public class RayTracer : MonoBehaviour
             for (int x = 0; x < width; x++)
             {
                 Renderer pixel = Instantiate(pixelPrefab);
-                
+
                 SetRendererColor(pixel, DefaultColor);
 
                 pixel.transform.localScale = new Vector3(pixelWidth, pixelHeight, 0.5f);
-                pixel.transform.localPosition = new Vector3(-screenWidth  * 0.5f + pixelWidth  * x, 
+                pixel.transform.localPosition = new Vector3(-screenWidth * 0.5f + pixelWidth * x,
                                                              screenHeight * 0.5f - pixelHeight * y, 0);
 
                 pixels.Add(pixel);
@@ -264,5 +271,16 @@ public class RayTracer : MonoBehaviour
         Color renderColor = ambientColor + diffuseColor + specularColor;
 
         return renderColor;
+    }
+
+    private void LimitInput(TMP_InputField inputField)
+    {
+        if (string.IsNullOrEmpty(inputField.text))
+            return;
+
+        if (int.TryParse(inputField.text, out int value))
+        {
+            inputField.text = Mathf.Min(value, 512).ToString();
+        }
     }
 }
