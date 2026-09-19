@@ -36,6 +36,11 @@ public class RayTracer : MonoBehaviour
     [SerializeField] private Slider reflectionSlider;
     [SerializeField] private int maxReflectionDepth = 3;
     [SerializeField] private float reflectionStrength = 0.3f;
+    [SerializeField] private float brightness = 1.2f;
+    [SerializeField] private float contrast = 0.85f;
+
+
+
 
     private List<Renderer> pixels = new List<Renderer>();
 
@@ -263,6 +268,10 @@ public class RayTracer : MonoBehaviour
                 renderColor = Color.Lerp(renderColor, reflectionColor, reflectionStrength);
             }
         }
+
+        // (7) Adjust brighteness & contrast
+        renderColor *= brightness;
+        renderColor = Color.Lerp(Color.gray, renderColor, contrast);
 
         return renderColor;
     }
