@@ -11,4 +11,4 @@ How to Build and Run in the Editor
 
 How to Run the Build File
 
-Run `41052 Assessment 1.exe`.
+Run `41052 Assessment 1.exe` in `Build` folder.
