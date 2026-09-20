@@ -11,4 +11,6 @@ How to Build and Run in the Editor
 
 How to Run the Build File
 
-Run `41052 Assessment 1.exe` in `Build` folder.
+1. Run `41052 Assessment 1.exe` in `Build` folder.
+2. After setting the ray tracing and lighting values, click the Render button. (256×256 or lower resolution is recommended to prevent lag.)
+
