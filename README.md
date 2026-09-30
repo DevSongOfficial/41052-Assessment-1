@@ -9,8 +9,10 @@ How to Build and Run in the Editor
 4. Press the Play button in the Unity Editor to run the project.
 
 
-How to Run the Build File
+How to Run the Build File (Without installing Unity)
 
 1. Run `41052 Assessment 1.exe` in `Build` folder.
 2. After setting the ray tracing and lighting values, click the Render button. (256×256 or lower resolution is recommended to prevent lag.)
 
+
+**Video Walkthrough**: https://www.youtube.com/watch?v=FL-JKEG5ZV4
